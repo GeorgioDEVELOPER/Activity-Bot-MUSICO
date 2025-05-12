@@ -3,10 +3,58 @@ const Discord = require('discord.js');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
+const ejs = require('ejs');
 
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static('public'));
+
+// Create views directory
+if (!fs.existsSync(path.join(__dirname, 'views'))) {
+  fs.mkdirSync(path.join(__dirname, 'views'));
+}
+
+if (!fs.existsSync(path.join(__dirname, 'public'))) {
+  fs.mkdirSync(path.join(__dirname, 'public'));
+}
+
+// Add route for the leaderboard webpage
+app.get('/leaderboard', async (req, res) => {
+  const sortedModerators = Object.entries(moderatorPoints)
+    .map(([id, points]) => ({ id, points }))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 100);
+
+  const moderatorsWithAvatars = await Promise.all(sortedModerators.map(async mod => {
+    try {
+      const user = await client.users.fetch(mod.id);
+      return {
+        ...mod,
+        avatar: user.displayAvatarURL({ dynamic: true, size: 64 }),
+        username: user.username
+      };
+    } catch (err) {
+      console.error(`Failed to fetch user ${mod.id}:`, err);
+      return {
+        ...mod,
+        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png', // default avatar fallback
+        username: `Unknown (${mod.id})`
+      };
+    }
+  }));
+
+  res.render('leaderboard', {
+    moderators: moderatorsWithAvatars,
+    lastUpdated: new Date(),
+    currentCelebration,
+    botName: client.user?.username || 'ModTracker'
+  });
+});
+
 
 // Basic middleware
 app.use(express.json());
