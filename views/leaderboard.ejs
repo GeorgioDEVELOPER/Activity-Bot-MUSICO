@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= botName %> Leaderboard</title>
+  <style>
+    body { font-family: 'Roboto', sans-serif; background: #36393f; color: #dcddde; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #7289da; text-align: center; }
+    .leaderboard { background: #2f3136; border-radius: 8px; padding: 20px; }
+    .moderator {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px; border-bottom: 1px solid #40444b;
+    }
+    .moderator:nth-child(odd) { background: #34373c; }
+    .rank { font-weight: bold; color: #7289da; width: 40px; }
+    .name {
+      flex: 1; display: flex; align-items: center; gap: 10px;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #72767d;
+    }
+    .points { white-space: nowrap; }
+    .celebration {
+      background: #faa61a; color: #000; padding: 15px;
+      border-radius: 8px; margin-bottom: 20px; text-align: center;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    .last-updated {
+      text-align: right; font-size: 0.8em; color: #72767d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 <%= botName %> Leaderboard</h1>
+
+    <% if (currentCelebration) { %>
+      <div class="celebration">
+        <%= currentCelebration %>
+      </div>
+    <% } %>
+
+    <div class="leaderboard">
+      <% moderators.forEach((mod, index) => { %>
+        <div class="moderator">
+          <span class="rank">#<%= index + 1 %></span>
+          <span class="name">
+            <img src="<%= mod.avatar %>" alt="avatar" class="avatar" />
+            <strong><%= mod.username %></strong>
+          </span>
+          <span class="points"><%= mod.points %> points</span>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="last-updated">
+      Last updated: <%= lastUpdated.toLocaleString() %>
+    </div>
+  </div>
+
+  <script>setTimeout(() => location.reload(), 60000);</script>
+</body>
+</html>
