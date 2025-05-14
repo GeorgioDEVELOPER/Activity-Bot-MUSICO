@@ -55,7 +55,7 @@ app.get('/leaderboard', async (req, res) => {
 
 // Health check
 app.get('/', (req, res) => {
-  res.status(200).json({ status: 'healthy', bot: 'Moderator Activity Tracker', uptime: process.uptime() });
+  res.status(200).json({ status: 'ONLINE', bot: 'Moderator Activity Tracker', uptime: process.uptime() });
 });
 
 const server = app.listen(PORT, () => {
@@ -103,10 +103,20 @@ function saveData() {
   try {
     const data = { moderatorPoints, leaderboardMessageId };
     fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
+    console.log('Data saved successfully');
   } catch (error) {
     console.error('Error saving data:', error);
   }
 }
+
+// Set up periodic saving every 30 seconds
+function setupPeriodicSaving() {
+  setInterval(() => {
+    saveData();
+    console.log(`[${new Date().toLocaleTimeString()}] 🔄 Saved Moderators Data.`);
+  }, 30 * 1000); // 30 seconds
+}
+
 
 async function initializeLeaderboard() {
   const channel = client.channels.cache.get(leaderboardChannelId);
@@ -133,7 +143,7 @@ function updateBotStatus() {
       `Tracking ${moderatorCount} moderators`,
       `${totalPoints} total points`,
       `Leaderboard updates`,
-      `musico.xyz`
+      `musicobot.xyz`
     ];
     const randomStatus = statusMessages[Math.floor(Math.random() * statusMessages.length)];
     client.user.setPresence({
@@ -261,6 +271,7 @@ client.on('ready', () => {
   initializeLeaderboard().catch(console.error);
   updateBotStatus();
   setInterval(updateBotStatus, 5 * 60 * 1000);
+  setupPeriodicSaving(); // Start the periodic saving
 });
 
 client.on('message', async message => {
@@ -318,23 +329,23 @@ client.on('message', async message => {
         }
         break;
 
-case 'web':
-  if (!moderatorRole) {
-    return message.reply('❌ You must be a moderator to use this command!');
-  }
+      case 'web':
+        if (!moderatorRole) {
+          return message.reply('❌ You must be a moderator to use this command!');
+        }
 
-  try {
-    await message.author.send(`📊 Here is the Moderator Leaderboard:\nhttps://activity-bot-musico.onrender.com/leaderboard`);
-    
-    // React only if the DM was successfully sent
-    if (message.channel.type !== 'DM') {
-      await message.react('📬');
-    }
-  } catch (err) {
-    // Only shows this message if the DM truly fails
-    await message.reply("❌ I couldn't DM you! Please enable DMs from server members.");
-  }
-  break;
+        try {
+          await message.author.send(`📊 Here is the Moderator Leaderboard:\nhttps://activity-bot-musico.onrender.com/leaderboard`);
+          
+          // React only if the DM was successfully sent
+          if (message.channel.type !== 'DM') {
+            await message.react('📬');
+          }
+        } catch (err) {
+          // Only shows this message if the DM truly fails
+          await message.reply("❌ I couldn't DM you! Please enable DMs from server members.");
+        }
+        break;
       default:
         await message.channel.send('❓ Unknown command. Try ?ping, ?uptime, ?info, or ?web');
     }
